@@ -131,7 +131,7 @@ bool CPlayer::Walk(Direction direction, bool run)
 
     if (oldDirection == newDirection)
     {
-        if (!g_PathFinder.CanWalk(newDirection, newX, newY, newZ))
+        if (!g_PathFinder.Pathfind(newDirection, newX, newY, newZ))
         {
             return false;
         }
@@ -152,7 +152,7 @@ bool CPlayer::Walk(Direction direction, bool run)
     }
     else
     {
-        if (!g_PathFinder.CanWalk(newDirection, newX, newY, newZ))
+        if (!g_PathFinder.Pathfind(newDirection, newX, newY, newZ))
         {
             if (newDirection == oldDirection)
             {

@@ -69,15 +69,21 @@ protected:
 
     bool FindPath(int maxNodes);
 
+    void GetNewXY(Direction direction, int &x, int &y);
+
 public:
     CPathFinder();
     virtual ~CPathFinder();
 
-    void GetNewXY(Direction direction, int &x, int &y);
+    /* Attempt to move, using pathfinding logic, in direction 'dir'. Return the actual direction
+	 * to move in, plus the expected x, y, and z coordinates. */
+    bool Pathfind(Direction &dir, int &x, int &y, char &z);
 
-    bool CanWalk(Direction &direction, int &x, int &y, char &z);
+    /* Move in the direction 'dir' and return the new x, y, and z coordinates. */
+    bool Move(Direction dir, int &x, int &y, char &z);
 
-    bool WalkTo(int x, int y, int z, int distance);
+    /* Pathfind to the coordinates provided, taking at most 'distance' steps. */
+    bool PathfindTo(int x, int y, int z, int distance);
 
     void ProcessAutowalk();
 

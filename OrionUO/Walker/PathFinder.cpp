@@ -370,62 +370,6 @@ void CPathFinder::GetNewXY(Direction direction, int &x, int &y)
     }
 }
 
-bool CPathFinder::CanWalk(Direction &direction, int &x, int &y, char &z)
-{
-    WISPFUN_DEBUG("c177_f5");
-
-    const uchar directions[3] = { 0, 1, -1 };
-    bool allowed = false;
-
-    for (int i = 0; i < 3; i++)
-    {
-        int newX = x;
-        int newY = y;
-        char newZ = z;
-        Direction newDirection = (Direction)((direction + directions[i]) % 8);
-
-        GetNewXY(newDirection, newX, newY);
-        allowed = CalculateNewZ(newX, newY, newZ, newDirection);
-
-        if (!allowed)
-        {
-            continue;
-        }
-
-        if (newDirection % 2)
-        {
-            const uchar adjacents[2] = { -1, 1 };
-
-            for (int j = 0; j < 2; j++)
-            {
-                int testX = x;
-                int testY = y;
-                char testZ = z;
-                Direction testDirection = (Direction)((newDirection + adjacents[j]) % 8);
-
-                GetNewXY(testDirection, testX, testY);
-                allowed = CalculateNewZ(testX, testY, testZ, testDirection);
-
-                if (!allowed)
-                {
-                    break;
-                }
-            }
-        }
-
-        if (allowed)
-        {
-            x = newX;
-            y = newY;
-            z = newZ;
-            direction = newDirection;
-            break;
-        }
-    }
-
-    return allowed;
-}
-
 int CPathFinder::GetGoalDistCost(const WISP_GEOMETRY::CPoint2Di &p, int cost)
 {
     WISPFUN_DEBUG("c177_f8");
@@ -586,7 +530,7 @@ bool CPathFinder::OpenNodes(CPathNode *node)
 
         uchar oldDirection = direction;
 
-        if (CanWalk(direction, x, y, z))
+        if (Pathfind(direction, x, y, z))
         {
             if (direction != oldDirection)
                 continue;
@@ -700,7 +644,74 @@ bool CPathFinder::FindPath(int maxNodes)
     return true;
 }
 
-bool CPathFinder::WalkTo(int x, int y, int z, int distance)
+bool CPathFinder::Pathfind(Direction &dir, int &x, int &y, char &z)
+{
+    const uchar directions[3] = { 0, 1, -1 };
+
+    for (int i = 0; i < 3; i++)
+    {
+        Direction testDir = (Direction)((dir + directions[i]) % 8);
+
+        if (Move(testDir, x, y, z))
+        {
+            dir = testDir;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool CPathFinder::Move(Direction dir, int &x, int &y, char &z)
+{
+    bool allowed = false;
+    int newX = x;
+    int newY = y;
+    char newZ = z;
+    Direction newDirection = dir;
+
+    GetNewXY(newDirection, newX, newY);
+    allowed = CalculateNewZ(newX, newY, newZ, newDirection);
+
+    if (!allowed)
+    {
+        return false;
+    }
+
+    if (newDirection % 2)
+    {
+        const uchar adjacents[2] = { -1, 1 };
+
+        for (int j = 0; j < 2; j++)
+        {
+            int testX = x;
+            int testY = y;
+            char testZ = z;
+            Direction testDirection = (Direction)((newDirection + adjacents[j]) % 8);
+
+            GetNewXY(testDirection, testX, testY);
+            allowed = CalculateNewZ(testX, testY, testZ, testDirection);
+
+            if (!allowed)
+            {
+                break;
+            }
+        }
+    }
+
+    if (allowed)
+    {
+        x = newX;
+        y = newY;
+        z = newZ;
+
+        return true;
+    }
+
+    return false;
+}
+
+bool CPathFinder::PathfindTo(int x, int y, int z, int distance)
 {
     WISPFUN_DEBUG("c177_f15");
     IFOR (i, 0, PATHFINDER_MAX_NODES)

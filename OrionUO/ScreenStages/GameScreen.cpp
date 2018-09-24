@@ -2112,7 +2112,7 @@ void CGameScreen::OnRightMouseButtonUp()
 
         if (rwo->IsLandObject() || rwo->IsSurface())
         {
-            if (g_PathFinder.WalkTo(rwo->GetX(), rwo->GetY(), rwo->GetZ(), 0))
+            if (g_PathFinder.PathfindTo(rwo->GetX(), rwo->GetY(), rwo->GetZ(), 0))
                 g_Orion.CreateTextMessage(TT_OBJECT, g_PlayerSerial, 3, 0, "Pathfinding!");
         }
     }
@@ -2128,7 +2128,7 @@ bool CGameScreen::OnRightMouseButtonDoubleClick()
 
         if (rwo->IsLandObject() || rwo->IsSurface())
         {
-            if (g_PathFinder.WalkTo(rwo->GetX(), rwo->GetY(), rwo->GetZ(), 0))
+            if (g_PathFinder.PathfindTo(rwo->GetX(), rwo->GetY(), rwo->GetZ(), 0))
             {
                 g_Orion.CreateTextMessage(TT_OBJECT, g_PlayerSerial, 3, 0, "Pathfinding!");
                 return true;

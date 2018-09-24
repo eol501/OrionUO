@@ -5409,7 +5409,7 @@ PACKET_HANDLER(Pathfinding)
     ushort x = ReadInt16BE();
     ushort y = ReadInt16BE();
     ushort z = ReadInt16BE();
-    g_PathFinder.WalkTo(x, y, z, 0);
+    g_PathFinder.PathfindTo(x, y, z, 0);
 }
 
 void CPacketManager::SetCachedGumpCoords(uint id, int x, int y)
