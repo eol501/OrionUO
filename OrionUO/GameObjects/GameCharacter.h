@@ -18,10 +18,6 @@ enum Direction
 
 struct Step
 {
-    int x;
-    int y;
-    char z;
-
     uint8_t dir : 5;
     uint8_t anim : 1;
     uint8_t run : 1;
@@ -100,12 +96,13 @@ public:
 
     deque<Step> m_Steps;
 
+    /* TODO: Check if public */
     Direction CalculateDirection(int curX, int curY, int newX, int newY);
 
     bool MoveTo(int x, int y, char z, Direction dir, bool run);
-    bool Move(int x, int y, char z, Direction dir, bool run);
+    bool Move(Direction dir, bool run);
 
-    void ForcePosition(int x, int y, char z, Direction dir);
+    virtual void ForcePosition(int x, int y, char z, Direction dir);
 
     int GetWalkSpeed(bool run, bool onMount);
 

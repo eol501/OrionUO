@@ -85,6 +85,19 @@ bool CPlayer::SetWarMode(WarModeState state)
     return true;
 }
 
+void CPlayer::GetRequestedEndPosition(int &x, int &y, char &z, Direction &dir)
+{
+    x = m_KnownX;
+    y = m_KnownY;
+    z = m_KnownZ;
+    dir = m_KnownDir;
+
+    for (const auto &step : m_RequestedSteps)
+    {
+        g_PathFinder.Move(dir, x, y, z);
+    }
+}
+
 bool CPlayer::Walk(Direction direction, bool run)
 {
     WISPFUN_DEBUG("c177_f7");
@@ -107,19 +120,7 @@ bool CPlayer::Walk(Direction direction, bool run)
     char z;
     Direction oldDirection;
 
-    if (m_RequestedSteps.empty())
-    {
-        GetDestination(x, y, z, oldDirection);
-    }
-    else
-    {
-        Step &step = m_RequestedSteps.back();
-
-        x = step.x;
-        y = step.y;
-        z = step.z;
-        oldDirection = (Direction)step.dir;
-    }
+    GetRequestedEndPosition(x, y, z, oldDirection);
 
     bool onMount = (FindLayer(OL_MOUNT) != NULL);
     ushort walkTime;
@@ -178,9 +179,6 @@ bool CPlayer::Walk(Direction direction, bool run)
     CloseBank();
 
     Step step = {};
-    step.x = x;
-    step.y = y;
-    step.z = z;
     step.dir = direction;
     step.run = run;
     step.rej = 0;
@@ -194,21 +192,17 @@ bool CPlayer::Walk(Direction direction, bool run)
             {
                 LOG("Animating catch-up step\n");
                 s.anim = true;
-                MoveTo(s.x, s.y, s.z, (Direction)s.dir, s.run);
+                Move((Direction)s.dir, s.run);
             }
         }
-
-        g_RemoveRangeXY.X = step.x;
-        g_RemoveRangeXY.Y = step.y;
 
         step.anim = true;
 
         LOG("Step immediately animated\n");
-        MoveTo(step.x, step.y, step.z, (Direction)step.dir, step.run);
+        Move((Direction)step.dir, step.run);
     }
 
     m_RequestedSteps.push_back(step);
-
     CPacketWalkRequest(direction, SequenceNumber, run).Send();
 
     if (SequenceNumber == 0xFF)
@@ -225,15 +219,41 @@ bool CPlayer::Walk(Direction direction, bool run)
     return true;
 }
 
-void CPlayer::ResetSteps()
+void CPlayer::ForcePosition(int x, int y, char z, Direction dir)
 {
+    LOG("FORCING POSITION TO (%d, %d, %d, %x)\n", x, y, z, dir);
+    CGameCharacter::ForcePosition(x, y, z, dir);
+
+    m_KnownX = x;
+    m_KnownY = y;
+    m_KnownZ = z;
+    m_KnownDir = dir;
+
+    bool sequenceReset = false;
     for (auto &s : m_RequestedSteps)
     {
-        s.rej = 1;
+        if (s.seq == 0)
+        {
+            sequenceReset = true;
+        }
+
+        if (sequenceReset)
+        {
+            s.anim = 0;
+        }
+        else
+        {
+            s.rej = 1;
+        }
     }
 
     SequenceNumber = 0;
     LastStepRequestTime = 0;
+
+    g_RemoveRangeXY.X = x;
+    g_RemoveRangeXY.Y = y;
+
+    CloseBank();
 }
 
 void CPlayer::DenyWalk(uint8_t sequence, Direction dir, uint32_t x, uint32_t y, uint8_t z)
@@ -251,7 +271,6 @@ void CPlayer::DenyWalk(uint8_t sequence, Direction dir, uint32_t x, uint32_t y, 
     if (step.rej == 0)
     {
         LOG("Received new reject sequence beginning at #%u\n", step.seq);
-        ResetSteps();
         ForcePosition(x, y, z, dir);
 
         if (step.seq != sequence)
@@ -260,9 +279,6 @@ void CPlayer::DenyWalk(uint8_t sequence, Direction dir, uint32_t x, uint32_t y, 
                 sequence);
             CPacketResend().Send();
         }
-
-        g_RemoveRangeXY.X = x;
-        g_RemoveRangeXY.Y = y;
     }
     else
     {
@@ -286,11 +302,13 @@ void CPlayer::ConfirmWalk(uchar sequence)
 
     if (step.seq != sequence)
     {
-        LOG("Received Confirm Walk for Sequence Number %d but it is not the next expected confirmation.\n",
-            sequence);
-        CPacketResend().Send();
-        return;
+        LOG("Received Confirm Walk for Sequence Number %d but expected %d.\n", sequence, step.seq);
+        /* Consider this a server bug and just move on. */
     }
+
+    g_PathFinder.Move((Direction)step.dir, m_KnownX, m_KnownY, m_KnownZ);
+
+    /* TODO: UPDATE KNOWN POSITION HERE */
 
     if (!step.anim)
     {
@@ -311,10 +329,7 @@ void CPlayer::ConfirmWalk(uchar sequence)
             }
         }
 
-        g_RemoveRangeXY.X = step.x;
-        g_RemoveRangeXY.Y = step.y;
-
-        MoveTo(step.x, step.y, step.z, (Direction)step.dir, step.run);
+        Move((Direction)step.dir, step.run);
     }
 }
 

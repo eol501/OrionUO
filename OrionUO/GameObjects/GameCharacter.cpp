@@ -229,23 +229,32 @@ bool CGameCharacter::MoveTo(int x, int y, char z, Direction dir, bool run)
         if (moveDir != endDir)
         {
             LOG("Queueing Pre-Turn\n");
-            Move(endX, endY, endZ, moveDir, run);
+            if (!Move(moveDir, run))
+            {
+                return false;
+            }
         }
 
         LOG("Queueing Move\n");
-        Move(x, y, z, moveDir, run);
+        if (!Move(moveDir, run))
+        {
+            return false;
+        }
     }
 
     if (moveDir != dir)
     {
         LOG("Queueing Post-Turn\n");
-        Move(x, y, z, dir, run);
+        if (!Move(dir, run))
+        {
+            return false;
+        }
     }
 
     return true;
 }
 
-bool CGameCharacter::Move(int x, int y, char z, Direction dir, bool run)
+bool CGameCharacter::Move(Direction dir, bool run)
 {
     if (m_Steps.size() >= MAX_STEPS_COUNT)
     {
@@ -258,9 +267,6 @@ bool CGameCharacter::Move(int x, int y, char z, Direction dir, bool run)
     }
 
     Step step = {};
-    step.x = x;
-    step.y = y;
-    step.z = z;
     step.dir = dir;
     step.run = run;
 
@@ -285,21 +291,19 @@ void CGameCharacter::ForcePosition(int x, int y, char z, Direction dir)
 
 void CGameCharacter::GetDestination(int &x, int &y, char &z, Direction &dir)
 {
-    if (m_Steps.empty())
+    x = m_X;
+    y = m_Y;
+    z = m_Z;
+    dir = Dir;
+
+    for (const auto &step : m_Steps)
     {
-        x = m_X;
-        y = m_Y;
-        z = m_Z;
-        dir = Dir;
-        return;
+        if (!g_PathFinder.Move((Direction)step.dir, x, y, z))
+        {
+            LOG("INVALID MOVEMENT SEQUENCE DETECTED. EXPECTING A REJECT.\n");
+            return;
+        }
     }
-
-    Step &step = m_Steps.back();
-
-    x = step.x;
-    y = step.y;
-    z = step.z;
-    dir = (Direction)step.dir;
 }
 
 void CGameCharacter::UpdateTextCoordinates()
@@ -718,6 +722,7 @@ void CGameCharacter::CorrectAnimationGroup(ushort graphic, ANIMATION_GROUPS grou
     }
 }
 
+/* TODO: This could be broken. Test sitting animations. */
 bool CGameCharacter::TestStepNoChangeDirection(uchar group)
 {
     WISPFUN_DEBUG("c15_f15");
@@ -735,7 +740,7 @@ bool CGameCharacter::TestStepNoChangeDirection(uchar group)
         {
             if (!m_Steps.empty())
             {
-                if (m_Steps.front().x != m_X || m_Steps.front().y != m_Y)
+                if (m_Steps.front().dir == Dir)
                     result = true;
             }
 
@@ -926,18 +931,24 @@ void CGameCharacter::ProcessAnimation()
         int delay = (int)g_Ticks - (int)LastStepTime;
         bool removeStep = (delay >= maxDelay);
 
+        int x = m_X;
+        int y = m_Y;
+        char z = m_Z;
+
         if (step.dir == Dir)
         {
+            g_PathFinder.Move((Direction)step.dir, x, y, z);
+
             float framesPerTile = (float)maxDelay / CHARACTER_ANIMATION_DELAY;
             float frameOffset = (float)delay / CHARACTER_ANIMATION_DELAY;
 
-            float x = frameOffset;
-            float y = frameOffset;
-            GetPixelOffset(step.dir, x, y, framesPerTile);
+            float pixelX = frameOffset;
+            float pixelY = frameOffset;
+            GetPixelOffset(step.dir, pixelX, pixelY, framesPerTile);
 
             OffsetX = (char)x;
             OffsetY = (char)y;
-            OffsetZ = ((((int)step.z - m_Z) * frameOffset) * (4.0f / framesPerTile));
+            OffsetZ = ((((int)z - m_Z) * frameOffset) * (4.0f / framesPerTile));
 
             turnOnly = false;
         }
@@ -951,23 +962,27 @@ void CGameCharacter::ProcessAnimation()
         {
             if (IsPlayer())
             {
-                if (m_X != step.x || m_Y != step.y || m_Z != step.z)
+                if (m_X != x || m_Y != y || m_Z != z)
                 {
-                    g_PluginManager.UpdatePlayerPosition(step.x, step.y, step.z, step.dir);
+                    g_PluginManager.UpdatePlayerPosition(x, y, z, step.dir);
                 }
 
-                if (m_Z - step.z >= 22)
+                if (m_Z - z >= 22)
                 {
                     g_Orion.CreateTextMessage(TT_OBJECT, g_PlayerSerial, 3, 0, "Ouch!");
                 }
             }
 
-            m_X = step.x;
-            m_Y = step.y;
-            m_Z = step.z;
+            m_X = x;
+            m_Y = y;
+            m_Z = z;
 
             if (IsPlayer())
+            {
                 g_GumpManager.RemoveRangedGumps();
+                g_RemoveRangeXY.X = x;
+                g_RemoveRangeXY.Y = y;
+            }
 
             UpdateRealDrawCoordinates();
 

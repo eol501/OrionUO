@@ -18,6 +18,14 @@ enum class WarModeState
 
 class CPlayer : public CGameCharacter
 {
+    int m_KnownX;
+    int m_KnownY;
+    char m_KnownZ;
+    Direction m_KnownDir;
+
+    void GetRequestedEndPosition(int &x, int &y, char &z, Direction &dir);
+    void CloseBank();
+
 public:
     short Str = 0;
     short Int = 0;
@@ -76,13 +84,11 @@ public:
 
     bool Walk(Direction direction, bool run);
 
-    void ResetSteps();
+    void ForcePosition(int x, int y, char z, Direction dir) override;
 
     void DenyWalk(uint8_t sequence, Direction direction, uint32_t x, uint32_t y, uint8_t z);
 
     void ConfirmWalk(uchar sequence);
-
-    void CloseBank();
 
     class CGameItem *FindBandage();
 
