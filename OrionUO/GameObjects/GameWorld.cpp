@@ -1053,7 +1053,7 @@ void CGameWorld::UpdateMobile(
 
     graphic += graphicIncrement;
 
-    bool found = character->QueueStep(x, y, z, dir, run);
+    bool found = character->MoveTo(x, y, z, dir, run);
 
     if (!found)
     {
@@ -1130,7 +1130,7 @@ void CGameWorld::UpdatePlayer(
             /* The player was moving toward this location anyway. */
             if (endDir != dir)
             {
-                g_Player->QueueStep(x, y, z, dir, run);
+                g_Player->MoveTo(x, y, z, dir, run);
             }
         }
         else

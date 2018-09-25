@@ -209,13 +209,8 @@ Direction CGameCharacter::CalculateDirection(int curX, int curY, int newX, int n
     }
 }
 
-bool CGameCharacter::QueueStep(int x, int y, char z, Direction dir, bool run)
+bool CGameCharacter::MoveTo(int x, int y, char z, Direction dir, bool run)
 {
-    if (m_Steps.size() >= MAX_STEPS_COUNT)
-    {
-        return false;
-    }
-
     int endX, endY;
     char endZ;
     Direction endDir;
@@ -227,50 +222,49 @@ bool CGameCharacter::QueueStep(int x, int y, char z, Direction dir, bool run)
         return true;
     }
 
-    if (!IsMoving())
-    {
-        LastStepTime = g_Ticks;
-    }
-
     Direction moveDir = CalculateDirection(endX, endY, x, y);
-
-    Step step = {};
 
     if (moveDir != DIR_INVALID)
     {
         if (moveDir != endDir)
         {
-            step.x = endX;
-            step.y = endY;
-            step.z = endZ;
-            step.dir = moveDir;
-            step.run = run;
-
             LOG("Queueing Pre-Turn\n");
-            m_Steps.push_back(step);
+            Move(endX, endY, endZ, moveDir, run);
         }
 
-        step.x = x;
-        step.y = y;
-        step.z = z;
-        step.dir = moveDir;
-        step.run = run;
-
         LOG("Queueing Move\n");
-        m_Steps.push_back(step);
+        Move(x, y, z, moveDir, run);
     }
 
     if (moveDir != dir)
     {
-        step.x = x;
-        step.y = y;
-        step.z = z;
-        step.dir = dir;
-        step.run = run;
-
         LOG("Queueing Post-Turn\n");
-        m_Steps.push_back(step);
+        Move(x, y, z, dir, run);
     }
+
+    return true;
+}
+
+bool CGameCharacter::Move(int x, int y, char z, Direction dir, bool run)
+{
+    if (m_Steps.size() >= MAX_STEPS_COUNT)
+    {
+        return false;
+    }
+
+    if (!IsMoving())
+    {
+        LastStepTime = g_Ticks;
+    }
+
+    Step step = {};
+    step.x = x;
+    step.y = y;
+    step.z = z;
+    step.dir = dir;
+    step.run = run;
+
+    m_Steps.push_back(step);
 
     return true;
 }

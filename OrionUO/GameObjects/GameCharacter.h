@@ -102,7 +102,8 @@ public:
 
     Direction CalculateDirection(int curX, int curY, int newX, int newY);
 
-    bool QueueStep(int x, int y, char z, Direction dir, bool run);
+    bool MoveTo(int x, int y, char z, Direction dir, bool run);
+    bool Move(int x, int y, char z, Direction dir, bool run);
 
     void ForcePosition(int x, int y, char z, Direction dir);
 

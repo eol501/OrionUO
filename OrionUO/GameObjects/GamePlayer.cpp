@@ -194,7 +194,7 @@ bool CPlayer::Walk(Direction direction, bool run)
             {
                 LOG("Animating catch-up step\n");
                 s.anim = true;
-                QueueStep(s.x, s.y, s.z, (Direction)s.dir, s.run);
+                MoveTo(s.x, s.y, s.z, (Direction)s.dir, s.run);
             }
         }
 
@@ -204,7 +204,7 @@ bool CPlayer::Walk(Direction direction, bool run)
         step.anim = true;
 
         LOG("Step immediately animated\n");
-        QueueStep(step.x, step.y, step.z, (Direction)step.dir, step.run);
+        MoveTo(step.x, step.y, step.z, (Direction)step.dir, step.run);
     }
 
     m_RequestedSteps.push_back(step);
@@ -314,7 +314,7 @@ void CPlayer::ConfirmWalk(uchar sequence)
         g_RemoveRangeXY.X = step.x;
         g_RemoveRangeXY.Y = step.y;
 
-        QueueStep(step.x, step.y, step.z, (Direction)step.dir, step.run);
+        MoveTo(step.x, step.y, step.z, (Direction)step.dir, step.run);
     }
 }
 
