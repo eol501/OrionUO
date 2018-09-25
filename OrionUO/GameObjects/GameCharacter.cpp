@@ -220,7 +220,7 @@ bool CGameCharacter::QueueStep(int x, int y, char z, Direction dir, bool run)
     char endZ;
     Direction endDir;
 
-    GetEndPosition(endX, endY, endZ, endDir);
+    GetDestination(endX, endY, endZ, endDir);
 
     if (endX == x && endY == y && endZ == z && endDir == dir)
     {
@@ -289,7 +289,7 @@ void CGameCharacter::ForcePosition(int x, int y, char z, Direction dir)
     OffsetZ = 0;
 }
 
-void CGameCharacter::GetEndPosition(int &x, int &y, char &z, Direction &dir)
+void CGameCharacter::GetDestination(int &x, int &y, char &z, Direction &dir)
 {
     if (m_Steps.empty())
     {

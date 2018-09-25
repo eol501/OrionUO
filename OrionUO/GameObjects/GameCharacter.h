@@ -108,7 +108,7 @@ public:
 
     int GetWalkSpeed(bool run, bool onMount);
 
-    void GetEndPosition(int &x, int &y, char &z, Direction &dir);
+    void GetDestination(int &x, int &y, char &z, Direction &dir);
     bool IsMoving() { return !m_Steps.empty(); }
 
     CGLTextTexture m_HitsTexture{ CGLTextTexture() };

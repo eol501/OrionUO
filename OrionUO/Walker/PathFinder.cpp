@@ -761,7 +761,7 @@ void CPathFinder::ProcessAutowalk()
             char z;
             Direction olddir;
 
-            g_Player->GetEndPosition(x, y, z, olddir);
+            g_Player->GetDestination(x, y, z, olddir);
 
             if (olddir == p->Dir)
                 m_PointIndex++;

@@ -109,7 +109,7 @@ bool CPlayer::Walk(Direction direction, bool run)
 
     if (m_RequestedSteps.empty())
     {
-        GetEndPosition(x, y, z, oldDirection);
+        GetDestination(x, y, z, oldDirection);
     }
     else
     {
@@ -300,7 +300,7 @@ void CPlayer::ConfirmWalk(uchar sequence)
         char endZ;
         Direction endDir;
 
-        GetEndPosition(endX, endY, endZ, endDir);
+        GetDestination(endX, endY, endZ, endDir);
 
         if (step.dir == endDir)
         {

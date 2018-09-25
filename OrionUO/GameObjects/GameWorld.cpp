@@ -1123,7 +1123,7 @@ void CGameWorld::UpdatePlayer(
         char endZ;
         Direction endDir;
 
-        g_Player->GetEndPosition(endX, endY, endZ, endDir);
+        g_Player->GetDestination(endX, endY, endZ, endDir);
 
         if (endX == x && endY == y)
         {
